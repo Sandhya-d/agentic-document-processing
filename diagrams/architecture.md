@@ -3,16 +3,15 @@
 This diagram shows the four architectural layers of the system: ingestion,
 agent orchestration, reusable AI skills, human-in-the-loop review, and
 storage. Agents coordinate work and make decisions; skills are stateless
-functions that do the actual computation. Neither layer talks directly to
-storage except through the persistence agent, which keeps the write path
-auditable and centralized.
+functions that do the actual computation. The connection between the
+orchestration and skills layers is drawn once at the cluster level — the
+specific agent-to-skill call mapping is detailed in the table in
+[`docs/design-document.md`](../docs/design-document.md#4-ai-skills-and-their-interactions)
+rather than as individual arrows here, to keep this diagram readable.
 
 ```mermaid
 flowchart TB
-    subgraph INGEST["Ingestion layer"]
-        UPLOAD["Catalogue upload"]
-        SPLIT["Page splitter service"]
-    end
+    UPLOAD["Catalogue upload"] --> SPLIT["Page splitter service"] --> COORD
 
     subgraph ORCH["Orchestration layer — agents"]
         COORD["Coordinator agent"]
@@ -20,41 +19,34 @@ flowchart TB
         EXTRACT["Extraction agent"]
         VALID["Validation agent"]
         PERSIST["Persistence agent"]
+        COORD --> CLASS --> EXTRACT --> VALID
     end
 
     subgraph SKILLS["AI skills layer — stateless"]
-        OCR["OCR skill"]
-        LAYOUT["Layout detection skill"]
-        IMGEXT["Image extraction skill"]
-        META["Metadata extraction skill"]
-        MATCH["Entity matching skill"]
-        CONF["Confidence scoring skill"]
+        LAYOUT["Layout detection"]
+        OCR["OCR"]
+        IMGEXT["Image extraction"]
+        META["Metadata extraction"]
+        MATCH["Entity matching"]
+        CONF["Confidence scoring"]
     end
+
+    ORCH -. "calls" .-> SKILLS
+    SKILLS -. "returns results" .-> ORCH
 
     subgraph HITL["Human-in-the-loop"]
-        QUEUE["Review queue"]
-        REVIEWER["Reviewer UI"]
+        QUEUE["Review queue"] --> REVIEWER["Reviewer UI"]
     end
 
+    VALID --> QUEUE
+    REVIEWER --> PERSIST
+
     subgraph STORE["Storage layer"]
-        OBJSTORE["Object storage — images"]
         PGDB["PostgreSQL"]
+        OBJSTORE["Object storage"]
         AUDIT["Audit log"]
     end
 
-    UPLOAD --> SPLIT --> COORD
-    COORD --> CLASS
-    CLASS --> LAYOUT
-    CLASS --> EXTRACT
-    EXTRACT --> OCR
-    EXTRACT --> IMGEXT
-    EXTRACT --> META
-    META --> MATCH
-    EXTRACT --> VALID
-    VALID --> CONF
-    VALID --> QUEUE
-    QUEUE --> REVIEWER
-    REVIEWER --> PERSIST
     PERSIST --> PGDB
     PERSIST --> OBJSTORE
     PERSIST --> AUDIT
@@ -78,7 +70,8 @@ doing one well-defined task. A skill takes an input and returns an
 output; it holds no workflow state and doesn't know what happens next.
 This is deliberate: skills can be reused across agents, swapped out
 (e.g. replace the OCR skill's underlying engine) or scaled independently
-of the orchestration logic.
+of the orchestration logic. See the design document for exactly which
+agent calls which skill and why.
 
 **Human-in-the-loop layer** — a review queue and reviewer UI where a
 curator inspects extracted records against the source image and
