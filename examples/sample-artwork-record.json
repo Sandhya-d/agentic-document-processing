@@ -1,0 +1,29 @@
+{
+  "artwork_record": {
+    "id": "b3f1a2e4-9c1a-4d2e-8f3a-1234567890ab",
+    "catalogue_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "page_id": "c4d5e6f7-8901-23ab-cdef-1234567890ab",
+    "artist": "Claude Monet",
+    "title": "Water Lilies",
+    "medium": "Oil on canvas",
+    "dimensions": "100 x 200 cm",
+    "estimate_low": 500000,
+    "estimate_high": 700000,
+    "currency": "USD",
+    "lot_number": "42",
+    "year": "1919",
+    "description": "A study of the water lily pond at Giverny.",
+    "artwork_image_path": "/storage/images/catalogue_42/lot_42.jpg",
+    "confidence_score": {
+      "artist_confidence": 0.95,
+      "title_confidence": 0.88,
+      "medium_confidence": 0.90,
+      "dimensions_confidence": 0.70,
+      "overall_confidence": 0.86
+    },
+    "status": "Approved",
+    "created_at": "2026-07-25T09:15:00Z",
+    "reviewed_by": "j.reviewer",
+    "reviewed_at": "2026-07-25T10:02:00Z"
+  }
+}
